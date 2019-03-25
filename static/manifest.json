@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "My Link",
+  "version": "1.1",
+  "description": "Customize Link",
+  "icons": {
+    "32": "img/icon32.png"
+  },
+  "browser_action": {
+    "default_title": "My Links",
+    "default_icon": "img/icon32.png",
+    "default_popup": "popup.html"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "homepage_url": "http://path/to/homepage",
+  "permissions": ["storage", "chrome://favicon/", "tabs", "contextMenus", "bookmarks"]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "my-link",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "babel-preset-env": "^1.7.0",
+    "emitting-analog-clock": "^1.0.0",
+    "parcel-bundler": "^1.12.3",
+    "vue": "^2.6.10",
+    "vue-hot-reload-api": "^2.3.3"
+  },
+  "devDependencies": {
+    "@vue/component-compiler-utils": "^2.6.0",
+    "babel-core": "^6.26.3",
+    "parcel-plugin-static-files-copy": "^2.0.0",
+    "sass": "^1.17.3",
+    "vue-template-compiler": "^2.6.10"
+  },
+  "alias": {
+    "vue": "./node_modules/vue/dist/vue.common.js"
+  },
+  "scripts": {
+    "start": "parcel src/newtab.html",
+    "build": "parcel build ./src/newtab.html"
+  },
+  "staticFiles": {
+    "staticPath": "static",
+    "watcherGlob": false
+  },
+  "author": "",
+  "license": "ISC"
+}
