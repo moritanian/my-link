@@ -1,6 +1,6 @@
 <template>
 <div class='links' v-show="visible">
-  <controlled-image class="bg-image" url='/img/kyoto1-large.jpg' @load="onloadBackground"> </controlled-image>
+  <controlled-image class="bg-image" url='/img/kyoto1.jpg' @load="onloadBackground"> </controlled-image>
   <!--<controlled-image class="bg-image" url='https://farm5.staticflickr.com/4273/34378170890_3901a0ac25_k.jpg'> </controlled-image>-->
   <!--<controlled-image class="bg-image" url='https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e'> </controlled-image>-->
   
