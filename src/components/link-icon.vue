@@ -1,6 +1,7 @@
 <template>
 <div class='link-icon' v-on:click='onclick'>
   <div class='link-icon-content' v-on:click='onclick'>
+    <div class="background"></div>
     <a :href='url' class="link-icon-inner" :class="{dir: dir, open: open}">
       <div class="edit-button" @click="onclickEditButton">
         <img src="./../img/edit-menu.svg">
@@ -21,8 +22,6 @@ export default {
   },
   methods: {
     onclick (e) {
-      console.log(e);
-      // window.location = this.url;
       if (this.dir){
         e.stopPropagation();
         e.preventDefault();
@@ -31,7 +30,6 @@ export default {
       
     },
     onclickEditButton (e) {
-      console.log('onClick', this.id);
       e.preventDefault();
       e.stopPropagation();
       this.$emit('edit', this.id);
@@ -39,7 +37,7 @@ export default {
   }
 }
 </script>
-<style lang='scss'>
+<style lang='scss' scoped>
 .link-image {
   width: 32px;
   height: 32px;
@@ -51,10 +49,6 @@ export default {
 .link-icon {
   width: 110px;
   height: 110px;
-
-   &:hover {
-      z-index: 100;
-    }
 
   .link-icon-content {
     padding: 10px;
@@ -104,9 +98,9 @@ export default {
       box-shadow: #6f6f6fa1 3px 1px 8px;
 
       color: #efefef;
-      box-shadow: 3px 1px 8px hsla(0, 0%, 6%, 0.63);
       background-color: #3c3c3ca8;
       background-color: rgba(0, 0, 0, 0.58);
+      border: solid #ffffffb3 1px;
 
       &.dir {
         background-color: rgba(74, 86, 95, 0.95);
@@ -118,7 +112,7 @@ export default {
 
       &:hover {
         height: auto;
-
+        z-index: 100;
       }
 
       .link-title {

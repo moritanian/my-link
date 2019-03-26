@@ -1,6 +1,9 @@
 <template>
 <div class='links' v-show="visible">
-  <controlled-image class="bg-image" url='/img/kyoto1.jpg' @load="onloadBackground"> </controlled-image>
+  <controlled-image
+    class="bg-image"
+    :class="{blur: settings.backgroundBlur}"
+    :url="settings.backgroundImage" @load="onloadBackground" @failed="onfailedBackground"> </controlled-image>
   <!--<controlled-image class="bg-image" url='https://farm5.staticflickr.com/4273/34378170890_3901a0ac25_k.jpg'> </controlled-image>-->
   <!--<controlled-image class="bg-image" url='https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e'> </controlled-image>-->
   
@@ -12,14 +15,21 @@
       </a>
     </li>
   </ul>
-  <emitting-analog-clock id='main-clock' :size='260' :showDigital="true" class="main-clock"></emitting-analog-clock>
-  
+
+  <div class="clock-container">
+    <emitting-analog-clock v-if="settings.visibleClock" id='main-clock' :size='260' :showDigital="true" class="main-clock"></emitting-analog-clock>
+  </div>
+
   <links :urls="urls" @edit='editLinkItem' @toggle="toggleLinkItem"></links>
-  <button id='delete' v-on:click="deleteUrls">delete</button>
-  
+
+  <div class="debug-modes" v-if="settings.debug">
+   <button id='delete' v-on:click="deleteUrls">delete</button>
+   <button id='format' v-on:click="formatUrls">format</button>
+  </div>
+
   <img class="customize-icon" @click="onclickCustomize" src="./../img/toggle.svg" />
 
-  <customize-dialog ref="customizeDialog"> </customize-dialog>
+  <customize-dialog ref="customizeDialog" @change="onRequestChangeSettings" :settings="settings"> </customize-dialog>
   <edit-link-dialog @updateItem='updateLinkItem' @deleteItem='deleteLinkItem' ref="editLinkDialog"></edit-link-dialog>
 </div>
 </template>
@@ -31,12 +41,70 @@ import EditLinkDialog from './edit-link-dialog';
 import CustomizeDialog from './customize-dialog';
 import ControlledImage from './controlled-image';
 import EmittingAnalogClock from './emitting-analog-clock';
+import getImage from './../unsplash';
+import { setTimeout } from 'timers';
+
+const sampleUrls = {
+    children: [
+      {
+        id: "1",
+        favicon: '',
+        title: 'title',
+        url: 'http://localhost',
+        parentId: "0",
+        index: 0
+      },
+      {
+        id: "2",
+        favicon: '',
+        title: 'title2',
+        url: 'http://localhost2',
+        parentId: "0",
+        index: 1
+      },
+      {
+        id: "3",
+        title: 'dir',
+        dir: true,
+        open: false,
+        children: [
+          {
+            id: "4",
+            favicon: '',
+            title: 'title4',
+            url: 'http://localhost',
+            parentId: "3",
+            index: 0
+          },
+          {
+            id: "5",
+            favicon: '',
+            title: 'title5',
+            url: 'http://localhost2',
+            parentId: "3",
+            index: 1
+          },
+        ]
+      }
+    ],
+    id: "0"
+  };
+
+const defaultBackgroundImage = '/img/kyoto1.jpg';
 
 export default {
   name: 'app',
   components: {Links, EditLinkDialog, CustomizeDialog, ControlledImage, EmittingAnalogClock},
   data () {
     return {
+      settings: {
+        useBookmark: false,
+        visibleClock: true,
+        debug: true,
+        backgroundBlur: false,
+        backgroundImage: defaultBackgroundImage,
+        backgroundRandomImage: true
+      },
       urls: {
         children: []
       },
@@ -47,32 +115,48 @@ export default {
     }
   },
   created () {
+    this.getStorage('settings').then(settings => {
+      console.log('settings get', settings);
+      if (settings) {
+        settings.backgroundImage = settings.nextBackgroundImage || defaultBackgroundImage
+        Vue.set(this, 'settings', settings);
+      }
+      
+      if (this.settings.backgroundRandomImage) {
+        setTimeout( () => {
+          var randomWord = Array.from(Array(2)).map(i => Math.floor(Math.random()*26) + 97 ).map(i => String.fromCharCode(i)).join('');
+          console.log(randomWord)
+          getImage(randomWord, Math.random()*100).then(url => {
+            this.settings.nextBackgroundImage = url;
+            this.setStorage('settings', this.settings);
+          }).catch(e => {
+            console.error(e)
+          })
+        }, 5000);
+      }
+    });
+
+    this.getStorage('urls', sampleUrls).then(urls => {
+      if (!urls) {
+        urls = sampleUrls;
+      }
+      console.log('updated', urls)
+      this.urls = urls;
+    });
     if(this.extensionEnv){
-      chrome.storage.sync.get('urls', (data) => {
-        console.log('updated', data.urls)
-        this.urls = data.urls;
-      });
 
       chrome.storage.onChanged.addListener((data => {
-        this.urls = data.urls.newValue;
+        if (data.urls){
+          this.urls = data.urls.newValue;
+        }
+        if (data.settings) {
+          // Vue.set(this, 'settings', data.settings.newValue);
+        }
       }));
 
-      chrome.bookmarks.getTree((data) => {
-        console.log('bookmark', data);
-        this.urls = data[0];
-        decorate(this.urls);
-        function decorate (items){
-          items.children.map(item => {
-            if (item.children) {
-              Vue.set(item, 'dir', true);
-              Vue.set(item, 'open', false);
-              decorate(item);
-            } else {
-              item.favicon = 'chrome://favicon/' + item.url;
-            }
-          });
-        }
-      });
+      if (this.useBookmark) {
+        this.readBookmark();
+      }
       /*
       chrome.contextMenus.create({  
         title: "コンテキストメニューを追加",
@@ -84,60 +168,39 @@ export default {
       });
       */
      
-    } else {
-      // For test
-      this.urls = {
-        children: [
-          {
-            id: "1",
-            favicon: '',
-            title: 'title',
-            url: 'http://localhost',
-            parentId: "0",
-            index: 0
-          },
-          {
-            id: "2",
-            favicon: '',
-            title: 'title2',
-            url: 'http://localhost2',
-            parentId: "0",
-            index: 1
-          },
-          {
-            id: "3",
-            title: 'dir',
-            dir: true,
-            open: false,
-            children: [
-              {
-                id: "4",
-                favicon: '',
-                title: 'title4',
-                url: 'http://localhost',
-                parentId: "3",
-                index: 0
-              },
-              {
-                id: "5",
-                favicon: '',
-                title: 'title5',
-                url: 'http://localhost2',
-                parentId: "3",
-                index: 1
-              },
-            ]
-          }
-        ],
-        id: "0"
-      }
     }
   },
   mounted () {
   },
   methods: {
+    getStorage (key, defaultValue) {
+      if (!this.extensionEnv) {
+        return Promise.resolve(defaultValue);
+      }
+      return new Promise((resolve, reject) => {
+        chrome.storage.sync.get(key, (data) => {
+          resolve(data[key]);
+        });
+      })
+    },
+    setStorage (key, value) {
+      if (!this.extensionEnv) {
+        return Promise.resolve(value);
+      }
+      return new Promise((resolve, reject) => {
+        chrome.storage.sync.set({[key]: value}, () => {
+          resolve();
+        });
+      });
+    },
     deleteUrls () {
       this.updateUrls({children: []});
+    },
+    formatUrls () {
+      this.urls.children.forEach((item, index) => {
+        item.id = index + 1;
+      });
+      this.setStorage('urls', this.urls);
     },
     updateUrls (urls) {
       if (!this.extensionEnv) {
@@ -184,12 +247,41 @@ export default {
 
     },
     onclickCustomize () {
-      console.log(this.$refs)
       this.$refs.customizeDialog.open();
     },
     onloadBackground (){
-      console.log('onload background');
       this.visible = true;
+    },
+    onfailedBackground () {
+      console.log('failed')
+      this.settings.backgroundImage = defaultBackgroundImage
+    },
+    readBookmark () {
+      chrome.bookmarks.getTree((data) => {
+        console.log('bookmark', data);
+        return;
+        this.urls = data[0];
+        decorate(this.urls);
+        function decorate (items){
+          items.children.map(item => {
+            if (item.children) {
+              Vue.set(item, 'dir', true);
+              Vue.set(item, 'open', false);
+              decorate(item);
+            } else {
+              item.favicon = 'chrome://favicon/' + item.url;
+            }
+          });
+        }
+      });
+    },
+    onRequestChangeSettings (newSettings) {
+      for (var key in newSettings) {
+        this.settings[key] = newSettings[key];
+      }
+      this.setStorage('settings', this.settings).then(() => {
+        console.log('set item settings', this.settings);
+      });
     }
   }
 }
@@ -203,6 +295,10 @@ export default {
   position: absolute;
   top: 0;
   z-index: -1;
+
+  &.blur {
+    filter: blur(2px);
+  }
 }
 .header {
   
@@ -219,6 +315,10 @@ export default {
       height: 20px;
     }
   }
+}
+
+.clock-container {
+  height: 260px;
 }
 .link-items {
   display: flex;

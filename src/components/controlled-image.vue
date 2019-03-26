@@ -1,6 +1,6 @@
 <template>
 <div class="c-image" v-show="visible">
-  <img :src="url" v-on:load="load">
+  <img :src="url" v-on:load="load" v-on:error="failed">
 </div>
 </template>
 
@@ -25,11 +25,14 @@ export default {
   methods: {
     load (e) {
       this.$emit('load', e);
+    },
+    failed (e) {
+      this.$emit('failed', e);
     }
   }
 }
 </script>
-<style lang='scss'>
+<style lang='scss' scoped>
 .c-image {
   width: 100%;
   height: 100%;

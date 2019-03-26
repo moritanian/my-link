@@ -17,7 +17,7 @@ export default {
   components: {LinkIcon, Links},
   props: ['urls'],
   data () {
-    console.log(this.urls);
+    console.log('link data', this.urls);
     return {
     }
   },
@@ -37,7 +37,7 @@ export default {
   }
 }
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .link-items {
   display: flex;
   justify-content: center;

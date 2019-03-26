@@ -66,7 +66,7 @@ export default {
   }
 }
 </script>
-<style lang='scss'>
+<style lang='scss' scoped>
 .dialog-modal {
   z-index: 500;
   position: absolute;
