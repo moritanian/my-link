@@ -40,9 +40,8 @@ import Links from './links';
 import EditLinkDialog from './edit-link-dialog';
 import CustomizeDialog from './customize-dialog';
 import ControlledImage from './controlled-image';
-import EmittingAnalogClock from './emitting-analog-clock';
-import getImage from './../unsplash';
-import { setTimeout } from 'timers';
+import EmittingAnalogClock from 'vue-emitting-analog-clock';
+import getImage, {prefetchImage} from './../unsplash';
 
 const sampleUrls = {
     children: [
@@ -128,6 +127,7 @@ export default {
           console.log(randomWord)
           getImage(randomWord, Math.random()*100).then(url => {
             this.settings.nextBackgroundImage = url;
+            prefetchImage(url).then(buffer => console.log(buffer));
             this.setStorage('settings', this.settings);
           }).catch(e => {
             console.error(e)
@@ -227,7 +227,7 @@ export default {
     },
     deleteLinkItem () {
       var parent = this.getLinkItem(this.editingItem.parentId);
-      parent.children.splice(this.editingItem.index ,1)
+      parent.children.splice(parent.children.indexOf(this.editingItem) ,1);
       this.updateUrls(this.urls);
     },
     editLinkItem (id) {

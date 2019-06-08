@@ -21,7 +21,9 @@ console.log(bg)
 
 
       const index = data.urls.children.length;
-      const id = data.urls.children[data.urls.children.length - 1].id + 1;
+      const id = data.urls.children[data.urls.children.length - 1] ?
+        data.urls.children[data.urls.children.length - 1].id + 1 :
+        1;
 
       console.log(data, id);
 
